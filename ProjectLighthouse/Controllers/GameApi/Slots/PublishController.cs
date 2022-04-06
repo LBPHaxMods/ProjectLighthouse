@@ -7,6 +7,7 @@ using System.Xml.Serialization;
 using LBPUnion.ProjectLighthouse.Helpers;
 using LBPUnion.ProjectLighthouse.Serialization;
 using LBPUnion.ProjectLighthouse.Types;
+using LBPUnion.ProjectLighthouse.Types.Files;
 using LBPUnion.ProjectLighthouse.Types.Levels;
 using LBPUnion.ProjectLighthouse.Types.Profiles;
 using LBPUnion.ProjectLighthouse.Types.Settings;
@@ -91,6 +92,12 @@ public class PublishController : ControllerBase
             if (!FileHelper.ResourceExists(resource)) return this.BadRequest();
         }
 
+        LbpFile? rootLevel = LbpFile.FromHash(slot.RootLevel);
+
+        if (rootLevel == null) return this.BadRequest();
+
+        if (rootLevel.FileType != LbpFileType.Level) return this.BadRequest();
+
         // Republish logic
         if (slot.SlotId != 0)
         {
@@ -108,6 +115,8 @@ public class PublishController : ControllerBase
             slot.LocationId = oldSlot.LocationId;
             slot.SlotId = oldSlot.SlotId;
 
+            #region Set plays
+
             slot.PlaysLBP1 = oldSlot.PlaysLBP1;
             slot.PlaysLBP1Complete = oldSlot.PlaysLBP1Complete;
             slot.PlaysLBP1Unique = oldSlot.PlaysLBP1Unique;
@@ -124,12 +133,15 @@ public class PublishController : ControllerBase
             slot.PlaysLBPVitaComplete = oldSlot.PlaysLBPVitaComplete;
             slot.PlaysLBPVitaUnique = oldSlot.PlaysLBPVitaUnique;
 
+            #endregion
+
             slot.FirstUploaded = oldSlot.FirstUploaded;
             slot.LastUpdated = TimeHelper.UnixTimeMilliseconds();
 
             slot.TeamPick = oldSlot.TeamPick;
 
-            slot.GameVersion = gameToken.GameVersion;
+            // Only update a slot's gameVersion if the level was actually change
+            if (oldSlot.RootLevel != slot.RootLevel) slot.GameVersion = gameToken.GameVersion;
 
             if (slot.MinimumPlayers == 0 || slot.MaximumPlayers == 0)
             {
