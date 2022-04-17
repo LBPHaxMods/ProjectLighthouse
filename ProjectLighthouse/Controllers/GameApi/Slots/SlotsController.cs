@@ -39,7 +39,7 @@ public class SlotsController : ControllerBase
 
         string response = Enumerable.Aggregate
         (
-            this.database.Slots.ByGameVersion(gameVersion, token.UserId == user.UserId)
+            this.database.Slots.ByGameVersion(gameVersion, token.UserId == user.UserId, true)
                 .Where(s => s.Creator!.Username == user.Username)
                 .Skip(pageStart - 1)
                 .Take(Math.Min(pageSize, ServerSettings.Instance.EntitledSlots)),
@@ -77,7 +77,7 @@ public class SlotsController : ControllerBase
 
         GameVersion gameVersion = token.GameVersion;
 
-        Slot? slot = await this.database.Slots.ByGameVersion(gameVersion, true).FirstOrDefaultAsync(s => s.SlotId == id);
+        Slot? slot = await this.database.Slots.ByGameVersion(gameVersion, true, true).FirstOrDefaultAsync(s => s.SlotId == id);
 
         if (slot == null) return this.NotFound();
 
@@ -119,8 +119,7 @@ public class SlotsController : ControllerBase
 
         GameVersion gameVersion = token.GameVersion;
 
-        IQueryable<Slot> slots = this.database.Slots.ByGameVersion
-                (gameVersion)
+        IQueryable<Slot> slots = this.database.Slots.ByGameVersion(gameVersion, false, true)
             .OrderByDescending(s => s.FirstUploaded)
             .Skip(pageStart - 1)
             .Take(Math.Min(pageSize, 30));
@@ -154,7 +153,7 @@ public class SlotsController : ControllerBase
 
         GameVersion gameVersion = token.GameVersion;
 
-        IQueryable<Slot> slots = this.database.Slots.ByGameVersion(gameVersion)
+        IQueryable<Slot> slots = this.database.Slots.ByGameVersion(gameVersion, false, true)
             .Where(s => s.TeamPick)
             .OrderByDescending(s => s.LastUpdated)
             .Skip(pageStart - 1)
@@ -188,7 +187,7 @@ public class SlotsController : ControllerBase
 
         GameVersion gameVersion = token.GameVersion;
 
-        IEnumerable<Slot> slots = this.database.Slots.ByGameVersion(gameVersion).OrderBy(_ => EF.Functions.Random()).Take(Math.Min(pageSize, 30));
+        IEnumerable<Slot> slots = this.database.Slots.ByGameVersion(gameVersion, false, true).OrderBy(_ => EF.Functions.Random()).Take(Math.Min(pageSize, 30));
 
         string response = slots.Aggregate(string.Empty, (current, slot) => current + slot.Serialize(gameVersion));
 
@@ -377,7 +376,7 @@ public class SlotsController : ControllerBase
     {
         if (version == GameVersion.LittleBigPlanetVita || version == GameVersion.LittleBigPlanetPSP || version == GameVersion.Unknown)
         {
-            return this.database.Slots.ByGameVersion(version);
+            return this.database.Slots.ByGameVersion(version, false, true);
         }
 
         string _dateFilterType = dateFilterType ?? "";
