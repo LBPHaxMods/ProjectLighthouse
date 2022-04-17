@@ -1,6 +1,6 @@
 {
-    "name": "Project Lighthouse",
-    "short_name": "Lighthouse",
+    "name": "LBP3 Beta Private Servers (Lighthouse)",
+    "short_name": "LBP3 Beta Servers",
     "icons": [
         {
             "src": "/android-chrome-192x192.png",
@@ -13,7 +13,7 @@
             "type": "image/png"
         }
     ],
-    "theme_color": "#008cff",
-    "background_color": "#009B00",
+    "theme_color": "#7E45E0",
+    "background_color": "#6CA1FF",
     "display": "standalone"
 }
