@@ -10,8 +10,8 @@ namespace LBPUnion.ProjectLighthouse.Types.Categories;
 public class NewestLevelsCategory : Category
 {
     public override string Name { get; set; } = "Newest Levels";
-    public override string Description { get; set; } = "Levels recently published";
-    public override string IconHash { get; set; } = "g820623";
+    public override string Description { get; set; } = "The worst fucking levels you've ever seen";
+    public override string IconHash { get; set; } = "g103236";
     public override string Endpoint { get; set; } = "newest";
     public override Slot? GetPreviewSlot(Database database) => database.Slots.OrderByDescending(s => s.FirstUploaded).FirstOrDefault();
     public override IEnumerable<Slot> GetSlots
