@@ -109,3 +109,40 @@ div.cardStatsUnderTitle > span {
 }
 
 /*#endregion Comments*/
+
+/*#theme*/
+
+body {
+    background: #000;
+    color: #8A47FF
+}
+
+div.ui.menu {
+    background: #C9F7F8;
+}
+
+div.ui.attached.menu:not(.tabular) {
+    border: 1px solid #000000;
+}
+
+div.ui.menu .item {
+    -webkit-transition: background .4s ease, color .4s ease, -webkit-box-shadow .4s ease;
+    transition: background .4s ease, color .4s ease, -webkit-box-shadow .4s ease;
+    transition: background .4s ease, color .4s ease, -webkit-box-shadow .4s ease;
+    transition: background .4s ease, color .4s ease, -webkit-box-shadow .4s ease;
+	color: #8A47FF;
+}
+
+a {
+    color: #cdcdcd;
+    text-decoration: none;
+}
+
+div.ui.segment {
+    background: #C9F7F8;
+}
+
+div.ui.input {
+	color: rgb(72 0 255);
+}
+/*#End of theme*/
