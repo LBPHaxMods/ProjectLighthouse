@@ -9,9 +9,9 @@ namespace LBPUnion.ProjectLighthouse.Types.Categories;
 
 public class TeamPicksCategory : Category
 {
-    public override string Name { get; set; } = "Team Picks";
-    public override string Description { get; set; } = "Levels given awards by your instance admin";
-    public override string IconHash { get; set; } = "g820626";
+    public override string Name { get; set; } = "Swouse Picks";
+    public override string Description { get; set; } = "The most Swousetastic! levels you've ever seen.";
+    public override string IconHash { get; set; } = "g103624";
     public override string Endpoint { get; set; } = "team_picks";
     public override Slot? GetPreviewSlot(Database database) => database.Slots.OrderByDescending(s => s.FirstUploaded).FirstOrDefault(s => s.TeamPick);
     public override IEnumerable<Slot> GetSlots
