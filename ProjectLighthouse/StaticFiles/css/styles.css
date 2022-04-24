@@ -2,13 +2,15 @@ div.pageContainer {
     display: flex;
     flex-direction: column;
     min-height: 100vh;
+    background-color: #3D9FBC;
+    color: blue;
 }
 
 div.main {
     flex: 1;
 }
 
-#lighthouse-debug-info > p {
+#lighthouse-debug-info &gt; p {
     margin-bottom: 1px;
 }
 
@@ -44,8 +46,8 @@ canvas.hide-subjects {
     align-self: center
 }
 
-.cardStats > h1,
-.cardStats > h2 {
+.cardStats &gt; h1,
+.cardStats &gt; h2 {
     margin-bottom: 2px;
 }
 
@@ -57,7 +59,7 @@ canvas.hide-subjects {
     margin-left: auto;
 }
 
-.cardButtons > a {
+.cardButtons &gt; a {
     margin-bottom: 5px !important;
     vertical-align: center;
 }
@@ -66,11 +68,11 @@ canvas.hide-subjects {
     margin-bottom: 10px;
 }
 
-div.cardStatsUnderTitle > i {
+div.cardStatsUnderTitle &gt; i {
     margin-right: 2px;
 }
 
-div.cardStatsUnderTitle > span {
+div.cardStatsUnderTitle &gt; span {
     margin-right: 5px;
 }
 
@@ -92,23 +94,6 @@ div.cardStatsUnderTitle > span {
 /*#endregion User cards*/
 
 /*#endregion Cards*/
-
-/*#region Comments*/
-
-.comment {
-    width: 100%;
-    display: inline-block;
-    text-align: left;
-}
-
-.voting {
-    text-align: center;
-    display: inline-block;
-    float: left;
-    margin-right: 0.5em;
-}
-
-/*#endregion Comments*/
 
 /*#theme*/
 
