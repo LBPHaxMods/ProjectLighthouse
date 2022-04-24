@@ -15,6 +15,7 @@ public class BaseLayout : PageModel
         new PageNavigationItem("Home", "/", "home"),
         new PageNavigationItem("Users", "/users/0", "user friends"),
         new PageNavigationItem("Photos", "/photos/0", "camera"),
+        new PageNavigationItem("Images that go hard", "/images", "camera"),
         new PageNavigationItem("Levels", "/slots/0", "certificate"),
     };
 
