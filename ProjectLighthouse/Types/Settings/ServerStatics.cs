@@ -8,7 +8,7 @@ namespace LBPUnion.ProjectLighthouse.Types.Settings;
 
 public static class ServerStatics
 {
-    public const string ServerName = "ProjectLighthouse";
+    public const string ServerName = "LegoLuigiTime";
 
     public const int PageSize = 20;
 
