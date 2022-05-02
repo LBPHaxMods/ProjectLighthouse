@@ -2,7 +2,7 @@ div.pageContainer {
     display: flex;
     flex-direction: column;
     min-height: 100vh;
-    background-color: #3D9FBC;
+    background-color: #95DBB3;
     color: blue;
 }
 
@@ -103,7 +103,7 @@ body {
 }
 
 div.ui.menu {
-    background: #C9F7F8;
+    background: #95DBB3;
 }
 
 div.ui.attached.menu:not(.tabular) {
@@ -124,10 +124,10 @@ a {
 }
 
 div.ui.segment {
-    background: #C9F7F8;
+    background: #95DBB3;
 }
 
 div.ui.input {
-	color: rgb(72 0 255);
+	color: rgb(149 219 179);
 }
 /*#End of theme*/
