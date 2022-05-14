@@ -2,7 +2,6 @@
 using System;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
-using Kettu;
 using LBPUnion.ProjectLighthouse.Helpers;
 using LBPUnion.ProjectLighthouse.Helpers.Extensions;
 using LBPUnion.ProjectLighthouse.Logging;
@@ -21,7 +20,7 @@ public class LoginForm : BaseLayout
     public LoginForm(Database database) : base(database)
     {}
 
-    public string Error { get; private set; }
+    public string? Error { get; private set; }
 
     [UsedImplicitly]
     public async Task<IActionResult> OnPost(string username, string password)
@@ -47,34 +46,34 @@ public class LoginForm : BaseLayout
         User? user = await this.Database.Users.FirstOrDefaultAsync(u => u.Username == username);
         if (user == null)
         {
-            Logger.Log($"User {username} failed to login on web due to invalid username", LoggerLevelLogin.Instance);
+            Logger.LogWarn($"User {username} failed to login on web due to invalid username", LogArea.Login);
             this.Error = "The username or password you entered is invalid.";
             return this.Page();
         }
 
         if (!BCrypt.Net.BCrypt.Verify(password, user.Password))
         {
-            Logger.Log($"User {user.Username} (id: {user.UserId}) failed to login on web due to invalid password", LoggerLevelLogin.Instance);
+            Logger.LogWarn($"User {user.Username} (id: {user.UserId}) failed to login on web due to invalid password", LogArea.Login);
             this.Error = "The username or password you entered is invalid.";
             return this.Page();
         }
 
         if (user.Banned)
         {
-            Logger.Log($"User {user.Username} (id: {user.UserId}) failed to login on web due to being banned", LoggerLevelLogin.Instance);
+            Logger.LogWarn($"User {user.Username} (id: {user.UserId}) failed to login on web due to being banned", LogArea.Login);
             this.Error = "You have been banned. Please contact an administrator for more information.\nReason: " + user.BannedReason;
             return this.Page();
         }
 
-        if (user.EmailAddress == null && ServerSettings.Instance.SMTPEnabled)
+        if (user.EmailAddress == null && ServerConfiguration.Instance.Mail.MailEnabled)
         {
-            Logger.Log($"User {user.Username} (id: {user.UserId}) failed to login; email not set", LoggerLevelLogin.Instance);
+            Logger.LogWarn($"User {user.Username} (id: {user.UserId}) failed to login; email not set", LogArea.Login);
 
             EmailSetToken emailSetToken = new()
             {
                 UserId = user.UserId,
                 User = user,
-                EmailToken = HashHelper.GenerateAuthToken(),
+                EmailToken = CryptoHelper.GenerateAuthToken(),
             };
 
             this.Database.EmailSetTokens.Add(emailSetToken);
@@ -86,7 +85,7 @@ public class LoginForm : BaseLayout
         WebToken webToken = new()
         {
             UserId = user.UserId,
-            UserToken = HashHelper.GenerateAuthToken(),
+            UserToken = CryptoHelper.GenerateAuthToken(),
         };
 
         this.Database.WebTokens.Add(webToken);
@@ -102,18 +101,14 @@ public class LoginForm : BaseLayout
             }
         );
 
-        Logger.Log($"User {user.Username} (id: {user.UserId}) successfully logged in on web", LoggerLevelLogin.Instance);
+        Logger.LogSuccess($"User {user.Username} (id: {user.UserId}) successfully logged in on web", LogArea.Login);
 
         if (user.PasswordResetRequired) return this.Redirect("~/passwordResetRequired");
-        if (ServerSettings.Instance.SMTPEnabled && !user.EmailAddressVerified) return this.Redirect("~/login/sendVerificationEmail");
+        if (ServerConfiguration.Instance.Mail.MailEnabled && !user.EmailAddressVerified) return this.Redirect("~/login/sendVerificationEmail");
 
         return this.RedirectToPage(nameof(LandingPage));
     }
 
     [UsedImplicitly]
-    public async Task<IActionResult> OnGet()
-    {
-        this.Error = string.Empty;
-        return this.Page();
-    }
+    public IActionResult OnGet() => this.Page();
 }

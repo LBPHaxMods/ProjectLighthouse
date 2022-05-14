@@ -1,26 +1,25 @@
 #nullable enable
-using System.Threading.Tasks;
-using JetBrains.Annotations;
+
 using LBPUnion.ProjectLighthouse.Pages.Layouts;
-using LBPUnion.ProjectLighthouse.Types;
 using Microsoft.AspNetCore.Mvc;
+#if !DEBUG
+using LBPUnion.ProjectLighthouse.Types;
+#endif
 
 namespace LBPUnion.ProjectLighthouse.Pages.Debug;
 
 public class RoomVisualizerPage : BaseLayout
 {
-    public RoomVisualizerPage([NotNull] Database database) : base(database)
+    public RoomVisualizerPage(Database database) : base(database)
     {}
 
-    public async Task<IActionResult> OnGet()
+    public IActionResult OnGet()
     {
         #if !DEBUG
         User? user = this.Database.UserFromWebRequest(this.Request);
         if (user == null || !user.IsAdmin) return this.NotFound();
+        #endif
 
         return this.Page();
-        #else
-        return this.Page();
-        #endif
     }
 }

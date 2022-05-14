@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Net.Http;
 using System.Threading.Tasks;
 using LBPUnion.ProjectLighthouse.Types.Settings;
@@ -14,13 +15,14 @@ public static class CaptchaHelper
         BaseAddress = new Uri("https://hcaptcha.com"),
     };
 
+    [SuppressMessage("ReSharper", "ArrangeObjectCreationWhenTypeNotEvident")]
     public static async Task<bool> Verify(string token)
     {
-        if (!ServerSettings.Instance.HCaptchaEnabled) return true;
+        if (!ServerConfiguration.Instance.Captcha.CaptchaEnabled) return true;
 
         List<KeyValuePair<string, string>> payload = new()
         {
-            new("secret", ServerSettings.Instance.HCaptchaSecret),
+            new("secret", ServerConfiguration.Instance.Captcha.Secret),
             new("response", token),
         };
 

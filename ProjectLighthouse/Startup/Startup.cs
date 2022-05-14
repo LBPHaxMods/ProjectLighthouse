@@ -2,7 +2,6 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
-using Kettu;
 using LBPUnion.ProjectLighthouse.Helpers;
 using LBPUnion.ProjectLighthouse.Logging;
 using LBPUnion.ProjectLighthouse.Serialization;
@@ -97,13 +96,13 @@ public class Startup
     {
         bool computeDigests = true;
 
-        if (string.IsNullOrEmpty(ServerSettings.Instance.ServerDigestKey))
+        if (string.IsNullOrEmpty(ServerConfiguration.Instance.DigestKey.PrimaryDigestKey))
         {
-            Logger.Log
+            Logger.LogWarn
             (
                 "The serverDigestKey configuration option wasn't set, so digest headers won't be set or verified. This will also prevent LBP 1, LBP 2, and LBP Vita from working. " +
                 "To increase security, it is recommended that you find and set this variable.",
-                LoggerLevelStartup.Instance
+                LogArea.Startup
             );
             computeDigests = false;
         }
@@ -142,10 +141,10 @@ public class Startup
 
                 requestStopwatch.Stop();
 
-                Logger.Log
+                Logger.LogInfo
                 (
                     $"{context.Response.StatusCode}, {requestStopwatch.ElapsedMilliseconds}ms: {context.Request.Method} {context.Request.Path}{context.Request.QueryString}",
-                    LoggerLevelHttp.Instance
+                    LogArea.HTTP
                 );
 
                 #if DEBUG
@@ -153,7 +152,7 @@ public class Startup
                 if (context.Request.Method == "POST")
                 {
                     context.Request.Body.Position = 0;
-                    Logger.Log(await new StreamReader(context.Request.Body).ReadToEndAsync(), LoggerLevelHttp.Instance);
+                    Logger.LogDebug(await new StreamReader(context.Request.Body).ReadToEndAsync(), LogArea.HTTP);
                 }
                 #endif
             }
@@ -173,7 +172,8 @@ public class Startup
 
                 if (computeDigests && digestPath.StartsWith("/LITTLEBIGPLANETPS3_XML"))
                 {
-                    string clientRequestDigest = await HashHelper.ComputeDigest(digestPath, authCookie, body, ServerSettings.Instance.ServerDigestKey);
+                    string clientRequestDigest = await CryptoHelper.ComputeDigest
+                        (digestPath, authCookie, body, ServerConfiguration.Instance.DigestKey.PrimaryDigestKey);
 
                     // Check the digest we've just calculated against the X-Digest-A header if the game set the header. They should match.
                     if (context.Request.Headers.TryGetValue("X-Digest-A", out StringValues sentDigest))
@@ -186,13 +186,14 @@ public class Startup
                             // Reset the body stream
                             body.Position = 0;
 
-                            clientRequestDigest = await HashHelper.ComputeDigest(digestPath, authCookie, body, ServerSettings.Instance.AlternateDigestKey);
+                            clientRequestDigest = await CryptoHelper.ComputeDigest
+                                (digestPath, authCookie, body, ServerConfiguration.Instance.DigestKey.AlternateDigestKey);
                             if (clientRequestDigest != sentDigest)
                             {
                                 #if DEBUG
                                 Console.WriteLine("Digest failed");
-                                Console.WriteLine("digestKey: " + ServerSettings.Instance.ServerDigestKey);
-                                Console.WriteLine("altDigestKey: " + ServerSettings.Instance.AlternateDigestKey);
+                                Console.WriteLine("digestKey: " + ServerConfiguration.Instance.DigestKey.PrimaryDigestKey);
+                                Console.WriteLine("altDigestKey: " + ServerConfiguration.Instance.DigestKey.AlternateDigestKey);
                                 Console.WriteLine("computed digest: " + clientRequestDigest);
                                 #endif
                                 // We still failed to validate. Abort the request.
@@ -219,10 +220,12 @@ public class Startup
                 {
                     responseBuffer.Position = 0;
 
-                    string digestKey = usedAlternateDigestKey ? ServerSettings.Instance.AlternateDigestKey : ServerSettings.Instance.ServerDigestKey;
+                    string digestKey = usedAlternateDigestKey
+                        ? ServerConfiguration.Instance.DigestKey.AlternateDigestKey
+                        : ServerConfiguration.Instance.DigestKey.PrimaryDigestKey;
 
                     // Compute the digest for the response.
-                    string serverDigest = await HashHelper.ComputeDigest(context.Request.Path, authCookie, responseBuffer, digestKey);
+                    string serverDigest = await CryptoHelper.ComputeDigest(context.Request.Path, authCookie, responseBuffer, digestKey);
                     context.Response.Headers.Add("X-Digest-A", serverDigest);
                 }
 

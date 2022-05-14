@@ -1,7 +1,6 @@
 #nullable enable
 using System.IO;
 using System.Threading.Tasks;
-using Kettu;
 using LBPUnion.ProjectLighthouse.Helpers;
 using LBPUnion.ProjectLighthouse.Logging;
 using LBPUnion.ProjectLighthouse.Types;
@@ -17,6 +16,20 @@ public class MessageController : ControllerBase
 {
     private readonly Database database;
 
+    private const string license = @"
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as
+published by the Free Software Foundation, either version 3 of the
+License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.";
+
     public MessageController(Database database)
     {
         this.database = database;
@@ -28,7 +41,7 @@ public class MessageController : ControllerBase
         User? user = await this.database.UserFromGameRequest(this.Request);
         if (user == null) return this.StatusCode(403, "");
 
-        return this.Ok($"{EulaHelper.License}\n{ServerSettings.Instance.EulaText}");
+        return this.Ok($"{license}\n{ServerConfiguration.Instance.EulaText}");
     }
 
     [HttpGet("announce")]
@@ -47,7 +60,7 @@ public class MessageController : ControllerBase
         GameToken gameToken = userAndToken.Value.Item2;
         #endif
 
-        string announceText = ServerSettings.Instance.AnnounceText;
+        string announceText = ServerConfiguration.Instance.AnnounceText;
 
         announceText = announceText.Replace("%user", user.Username);
         announceText = announceText.Replace("%id", user.UserId.ToString());
@@ -78,15 +91,15 @@ public class MessageController : ControllerBase
     public async Task<IActionResult> Filter()
     {
         User? user = await this.database.UserFromGameRequest(this.Request);
-        
+
         if (user == null) return this.StatusCode(403, "");
 
         string response = await new StreamReader(this.Request.Body).ReadToEndAsync();
-        
+
         string scannedText = CensorHelper.ScanMessage(response);
 
-        Logger.Log($"{user.Username}: {response} / {scannedText}", LoggerLevelFilter.Instance);
-        
+        Logger.LogInfo($"{user.Username}: {response} / {scannedText}", LogArea.Filter);
+
         return this.Ok(scannedText);
     }
 }

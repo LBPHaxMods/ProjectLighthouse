@@ -1,6 +1,5 @@
 #nullable enable
 using System.Threading.Tasks;
-using JetBrains.Annotations;
 using LBPUnion.ProjectLighthouse.Pages.Layouts;
 using LBPUnion.ProjectLighthouse.Types;
 using LBPUnion.ProjectLighthouse.Types.Profiles.Email;
@@ -12,14 +11,14 @@ namespace LBPUnion.ProjectLighthouse.Pages;
 
 public class CompleteEmailVerificationPage : BaseLayout
 {
-    public CompleteEmailVerificationPage([NotNull] Database database) : base(database)
+    public CompleteEmailVerificationPage(Database database) : base(database)
     {}
 
-    public string? Error = null;
+    public string? Error;
 
     public async Task<IActionResult> OnGet(string token)
     {
-        if (!ServerSettings.Instance.SMTPEnabled) return this.NotFound();
+        if (!ServerConfiguration.Instance.Mail.MailEnabled) return this.NotFound();
 
         User? user = this.Database.UserFromWebRequest(this.Request);
         if (user == null) return this.Redirect("~/login");

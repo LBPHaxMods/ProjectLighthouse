@@ -6,7 +6,6 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Kettu;
 using LBPUnion.ProjectLighthouse.Logging;
 using LBPUnion.ProjectLighthouse.Types.Files;
 using LBPUnion.ProjectLighthouse.Types.Settings;
@@ -21,7 +20,7 @@ public static class FileHelper
 
     public static bool IsFileSafe(LbpFile file)
     {
-        if (!ServerSettings.Instance.CheckForUnsafeFiles) return true;
+        if (!ServerConfiguration.Instance.CheckForUnsafeFiles) return true;
 
         if (file.FileType == LbpFileType.Unknown) return false;
 
@@ -115,8 +114,7 @@ public static class FileHelper
         EnsureDirectoryCreated(Path.Combine(Environment.CurrentDirectory, "png"));
         if (Directory.Exists("r"))
         {
-            Logger.Log
-                ("Converting all textures to PNG. This may take a while if this is the first time running this operation...", LoggerLevelStartup.Instance);
+            Logger.LogInfo("Converting all textures to PNG. This may take a while if this is the first time running this operation...", LogArea.Startup);
 
             ConcurrentQueue<string> fileQueue = new();
 

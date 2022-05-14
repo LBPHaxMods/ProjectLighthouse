@@ -1,7 +1,6 @@
 #nullable enable
 using System;
 using System.Linq;
-using Kettu;
 using LBPUnion.ProjectLighthouse.Logging;
 
 namespace LBPUnion.ProjectLighthouse.Types.Settings;
@@ -20,16 +19,16 @@ public static class ServerStatics
             }
             catch(Exception e)
             {
-                Logger.Log(e.ToString(), LoggerLevelDatabase.Instance);
+                Logger.LogError(e.ToString(), LogArea.Database);
                 return false;
             }
         }
     }
 
-    public static bool IsUnitTesting => AppDomain.CurrentDomain.GetAssemblies().Any(assembly => assembly.FullName.StartsWith("xunit"));
+    public static bool IsUnitTesting => AppDomain.CurrentDomain.GetAssemblies().Any(assembly => assembly.FullName!.StartsWith("xunit"));
 
     #if DEBUG
-        public static readonly bool IsDebug = true;
+    public static readonly bool IsDebug = true;
     #else
     public static readonly bool IsDebug = false;
     #endif

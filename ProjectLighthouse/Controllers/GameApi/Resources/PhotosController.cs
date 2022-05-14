@@ -6,7 +6,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
 using Discord;
-using Kettu;
 using LBPUnion.ProjectLighthouse.Helpers;
 using LBPUnion.ProjectLighthouse.Logging;
 using LBPUnion.ProjectLighthouse.Serialization;
@@ -35,7 +34,7 @@ public class PhotosController : ControllerBase
         User? user = await this.database.UserFromGameRequest(this.Request);
         if (user == null) return this.StatusCode(403, "");
 
-        if (user.PhotosByMe >= ServerSettings.Instance.PhotosQuota) return this.BadRequest();
+        if (user.PhotosByMe >= ServerConfiguration.Instance.UserGeneratedContentLimits.PhotosQuota) return this.BadRequest();
 
         this.Request.Body.Position = 0;
         string bodyString = await new StreamReader(this.Request.Body).ReadToEndAsync();
@@ -59,7 +58,7 @@ public class PhotosController : ControllerBase
 
         if (photo.Subjects.Count > 4) return this.BadRequest();
 
-        if (photo.Timestamp > TimestampHelper.Timestamp) return this.BadRequest();
+        if (photo.Timestamp > TimestampHelper.Timestamp) photo.Timestamp = TimestampHelper.Timestamp;
 
         foreach (PhotoSubject subject in photo.Subjects)
         {
@@ -68,7 +67,7 @@ public class PhotosController : ControllerBase
             if (subject.User == null) continue;
 
             subject.UserId = subject.User.UserId;
-            Logger.Log($"Adding PhotoSubject (userid {subject.UserId}) to db", LoggerLevelPhotos.Instance);
+            Logger.LogDebug($"Adding PhotoSubject (userid {subject.UserId}) to db", LogArea.Photos);
 
             this.database.PhotoSubjects.Add(subject);
         }
@@ -88,7 +87,7 @@ public class PhotosController : ControllerBase
 
         //            photo.Slot = await this.database.Slots.FirstOrDefaultAsync(s => s.SlotId == photo.SlotId);
 
-        Logger.Log($"Adding PhotoSubjectCollection ({photo.PhotoSubjectCollection}) to photo", LoggerLevelPhotos.Instance);
+        Logger.LogDebug($"Adding PhotoSubjectCollection ({photo.PhotoSubjectCollection}) to photo", LogArea.Photos);
 
         this.database.Photos.Add(photo);
 
@@ -100,7 +99,7 @@ public class PhotosController : ControllerBase
             {
                 Title = "New photo uploaded!",
                 Description = $"{user.Username} uploaded a new photo.",
-                ImageUrl = $"{ServerSettings.Instance.ExternalUrl}/gameAssets/{photo.LargeHash}",
+                ImageUrl = $"{ServerConfiguration.Instance.ExternalUrl}/gameAssets/{photo.LargeHash}",
                 Color = WebhookHelper.UnionColor,
             }
         );

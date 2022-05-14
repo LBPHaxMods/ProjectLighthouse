@@ -3,7 +3,6 @@ using System;
 using System.IO;
 using System.Text;
 using System.Text.Json;
-using Kettu;
 using LBPUnion.ProjectLighthouse.Helpers;
 using LBPUnion.ProjectLighthouse.Helpers.Extensions;
 using LBPUnion.ProjectLighthouse.Logging;
@@ -16,9 +15,9 @@ namespace LBPUnion.ProjectLighthouse.Types.Tickets;
 /// </summary>
 public class NPTicket
 {
-    public string Username { get; set; }
+    public string? Username { get; set; }
 
-    private Version ticketVersion { get; set; }
+    private Version? ticketVersion { get; set; }
 
     public Platform Platform { get; set; }
 
@@ -26,7 +25,7 @@ public class NPTicket
     public ulong IssuedDate { get; set; }
     public ulong ExpireDate { get; set; }
 
-    private string titleId { get; set; }
+    private string? titleId { get; set; }
 
     public GameVersion GameVersion { get; set; }
 
@@ -93,12 +92,8 @@ public class NPTicket
 
             reader.ReadUInt16BE(); // Ticket length, we don't care about this
 
-            #if DEBUG
             SectionHeader bodyHeader = reader.ReadSectionHeader();
-            Logger.Log($"bodyHeader.Type is {bodyHeader.Type}", LoggerLevelLogin.Instance);
-            #else
-            reader.ReadSectionHeader();
-            #endif
+            Logger.LogDebug($"bodyHeader.Type is {bodyHeader.Type}", LogArea.Login);
 
             switch (npTicket.ticketVersion)
             {
@@ -111,22 +106,22 @@ public class NPTicket
                 default: throw new NotImplementedException();
             }
 
+            if (npTicket.titleId == null) throw new ArgumentNullException($"{nameof(npTicket)}.{nameof(npTicket.titleId)}");
+
             // We already read the title id, however we need to do some post-processing to get what we want.
             // Current data: UP9000-BCUS98245_00
-            // We need to chop this to get the titleId we're looking for 
+            // We need to chop this to get the titleId we're looking for
             npTicket.titleId = npTicket.titleId.Substring(7); // Trim UP9000-
             npTicket.titleId = npTicket.titleId.Substring(0, npTicket.titleId.Length - 3); // Trim _00 at the end
             // Data now (hopefully): BCUS98245
 
-            #if DEBUG
-            Logger.Log($"titleId is {npTicket.titleId}", LoggerLevelLogin.Instance);
-            #endif
+            Logger.LogDebug($"titleId is {npTicket.titleId}", LogArea.Login);
 
             npTicket.GameVersion = GameVersionHelper.FromTitleId(npTicket.titleId); // Finally, convert it to GameVersion
 
             if (npTicket.GameVersion == GameVersion.Unknown)
             {
-                Logger.Log($"Could not determine game version from title id {npTicket.titleId}", LoggerLevelLogin.Instance);
+                Logger.LogWarn($"Could not determine game version from title id {npTicket.titleId}", LogArea.Login);
                 return null;
             }
 
@@ -143,45 +138,35 @@ public class NPTicket
 
             if (npTicket.Platform == Platform.Unknown)
             {
-                Logger.Log($"Could not determine platform from IssuerId {npTicket.IssuerId} decimal", LoggerLevelLogin.Instance);
+                Logger.LogWarn($"Could not determine platform from IssuerId {npTicket.IssuerId} decimal", LogArea.Login);
                 return null;
             }
 
             #if DEBUG
-            Logger.Log("npTicket data:", LoggerLevelLogin.Instance);
-            foreach (string line in JsonSerializer.Serialize(npTicket).Split('\n'))
-            {
-                Logger.Log(line, LoggerLevelLogin.Instance);
-            }
+            Logger.LogDebug("npTicket data:", LogArea.Login);
+            Logger.LogDebug(JsonSerializer.Serialize(npTicket), LogArea.Login);
             #endif
 
             return npTicket;
         }
         catch(NotImplementedException)
         {
-            Logger.Log($"The ticket version {npTicket.ticketVersion} is not implemented yet.", LoggerLevelLogin.Instance);
-            Logger.Log
+            Logger.LogError($"The ticket version {npTicket.ticketVersion} is not implemented yet.", LogArea.Login);
+            Logger.LogError
             (
                 "Please let us know that this is a ticket version that is actually used on our issue tracker at https://github.com/LBPUnion/project-lighthouse/issues !",
-                LoggerLevelLogin.Instance
+                LogArea.Login
             );
 
             return null;
         }
         catch(Exception e)
         {
-            Logger.Log("Failed to read npTicket!", LoggerLevelLogin.Instance);
-            Logger.Log("Either this is spam data, or the more likely that this is a bug.", LoggerLevelLogin.Instance);
-            Logger.Log
-            (
-                "Please report the following exception to our issue tracker at https://github.com/LBPUnion/project-lighthouse/issues!",
-                LoggerLevelLogin.Instance
-            );
-
-            foreach (string line in e.ToDetailedException().Split('\n'))
-            {
-                Logger.Log(line, LoggerLevelLogin.Instance);
-            }
+            Logger.LogError("Failed to read npTicket!", LogArea.Login);
+            Logger.LogError("Either this is spam data, or the more likely that this is a bug.", LogArea.Login);
+            Logger.LogError
+                ("Please report the following exception to our issue tracker at https://github.com/LBPUnion/project-lighthouse/issues!", LogArea.Login);
+            Logger.LogError(e.ToDetailedException(), LogArea.Login);
             return null;
         }
     }

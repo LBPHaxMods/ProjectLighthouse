@@ -2,7 +2,7 @@ using System;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
-using Kettu;
+using LBPUnion.ProjectLighthouse.Helpers.Extensions;
 using LBPUnion.ProjectLighthouse.Logging;
 using LBPUnion.ProjectLighthouse.Types.Settings;
 using Microsoft.Extensions.Hosting;
@@ -37,21 +37,21 @@ public class DebugWarmupLifetime : IHostLifetime
     {
         using HttpClient client = new();
 
-        string url = ServerSettings.Instance.ServerListenUrl;
+        string url = ServerConfiguration.Instance.ListenUrl;
         url = url.Replace("0.0.0.0", "127.0.0.1");
 
-        Logger.Log("Warming up Hot Reload...", LoggerLevelStartup.Instance);
+        Logger.LogDebug("Warming up Hot Reload...", LogArea.Startup);
         try
         {
             client.GetAsync(url).Wait();
         }
         catch(Exception e)
         {
-            Logger.Log("An error occurred while attempting to warm up hot reload. Initial page load will be delayed.", LoggerLevelStartup.Instance);
-            Logger.Log(e.Message, LoggerLevelStartup.Instance);
+            Logger.LogDebug("An error occurred while attempting to warm up hot reload. Initial page load will be delayed.", LogArea.Startup);
+            Logger.LogDebug(e.ToDetailedException(), LogArea.Startup);
             return;
         }
-        Logger.Log("Hot Reload is ready to go!", LoggerLevelStartup.Instance);
+        Logger.LogSuccess("Hot Reload is ready to go!", LogArea.Startup);
     }
 
     public Task StopAsync(CancellationToken cancellationToken) => this.consoleLifetime.StopAsync(cancellationToken);

@@ -1,7 +1,6 @@
 ﻿#nullable enable
 using System.Threading.Tasks;
 using JetBrains.Annotations;
-using Kettu;
 using LBPUnion.ProjectLighthouse.Helpers;
 using LBPUnion.ProjectLighthouse.Logging;
 using LBPUnion.ProjectLighthouse.Types;
@@ -19,23 +18,23 @@ public class CreateUserCommand : ICommand
         string onlineId = args[0];
         string password = args[1];
 
-        password = HashHelper.Sha256Hash(password);
+        password = CryptoHelper.Sha256Hash(password);
 
         User? user = await this._database.Users.FirstOrDefaultAsync(u => u.Username == onlineId);
         if (user == null)
         {
-            user = await this._database.CreateUser(onlineId, HashHelper.BCryptHash(password));
-            Logger.Log($"Created user {user.UserId} with online ID (username) {user.Username} and the specified password.", LoggerLevelLogin.Instance);
+            user = await this._database.CreateUser(onlineId, CryptoHelper.BCryptHash(password));
+            Logger.LogSuccess($"Created user {user.UserId} with online ID (username) {user.Username} and the specified password.", LogArea.Login);
 
             user.PasswordResetRequired = true;
-            Logger.Log("This user will need to reset their password when they log in.", LoggerLevelLogin.Instance);
+            Logger.LogInfo("This user will need to reset their password when they log in.", LogArea.Login);
 
             await this._database.SaveChangesAsync();
-            Logger.Log("Database changes saved.", LoggerLevelDatabase.Instance);
+            Logger.LogInfo("Database changes saved.", LogArea.Database);
         }
         else
         {
-            Logger.Log("A user with this username already exists.", LoggerLevelLogin.Instance);
+            Logger.LogError("A user with this username already exists.", LogArea.Login);
         }
     }
 

@@ -3,7 +3,6 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
-using Kettu;
 using LBPUnion.ProjectLighthouse.Helpers;
 using LBPUnion.ProjectLighthouse.Logging;
 using LBPUnion.ProjectLighthouse.Types;
@@ -46,14 +45,14 @@ public class LoginController : ControllerBase
 
         if (npTicket == null)
         {
-            Logger.Log("npTicket was null, rejecting login", LoggerLevelLogin.Instance);
+            Logger.LogWarn("npTicket was null, rejecting login", LogArea.Login);
             return this.BadRequest();
         }
 
         IPAddress? remoteIpAddress = this.HttpContext.Connection.RemoteIpAddress;
         if (remoteIpAddress == null)
         {
-            Logger.Log("unable to determine ip, rejecting login", LoggerLevelLogin.Instance);
+            Logger.LogWarn("unable to determine ip, rejecting login", LogArea.Login);
             return this.StatusCode(403, ""); // 403 probably isnt the best status code for this, but whatever
         }
 
@@ -69,7 +68,7 @@ public class LoginController : ControllerBase
             token = await this.database.AuthenticateUser(npTicket, ipAddress);
             if (token == null)
             {
-                Logger.Log("unable to find/generate a token, rejecting login", LoggerLevelLogin.Instance);
+                Logger.LogWarn($"Unable to find/generate a token for username {npTicket.Username}", LogArea.Login);
                 return this.StatusCode(403, ""); // If not, then 403.
             }
         }
@@ -78,13 +77,13 @@ public class LoginController : ControllerBase
 
         if (user == null || user.Banned)
         {
-            Logger.Log("unable to find a user from a token, rejecting login", LoggerLevelLogin.Instance);
+            Logger.LogError($"Unable to find user {npTicket.Username} from token", LogArea.Login);
             return this.StatusCode(403, "");
         }
 
-        if (ServerSettings.Instance.UseExternalAuth)
+        if (ServerConfiguration.Instance.Authentication.UseExternalAuth)
         {
-            if (ServerSettings.Instance.BlockDeniedUsers)
+            if (ServerConfiguration.Instance.Authentication.BlockDeniedUsers)
             {
                 string ipAddressAndName = $"{token.UserLocation}|{user.Username}";
                 if (DeniedAuthenticationHelper.RecentlyDenied(ipAddressAndName) || DeniedAuthenticationHelper.GetAttempts(ipAddressAndName) > 3)
@@ -95,7 +94,7 @@ public class LoginController : ControllerBase
                     DeniedAuthenticationHelper.AddAttempt(ipAddressAndName);
 
                     await this.database.SaveChangesAsync();
-                    Logger.Log("too many denied logins, rejecting login", LoggerLevelLogin.Instance);
+                    Logger.LogWarn($"Too many recent denied logins from user {user.Username}, rejecting login", LogArea.Login);
                     return this.StatusCode(403, "");
                 }
             }
@@ -127,11 +126,11 @@ public class LoginController : ControllerBase
 
         if (!token.Approved)
         {
-            Logger.Log("token unapproved, rejecting login", LoggerLevelLogin.Instance);
+            Logger.LogWarn($"Token unapproved for user {user.Username}, rejecting login", LogArea.Login);
             return this.StatusCode(403, "");
         }
 
-        Logger.Log($"Successfully logged in user {user.Username} as {token.GameVersion} client", LoggerLevelLogin.Instance);
+        Logger.LogSuccess($"Successfully logged in user {user.Username} as {token.GameVersion} client", LogArea.Login);
         // After this point we are now considering this session as logged in.
 
         // We just logged in with the token. Mark it as used so someone else doesnt try to use it,
