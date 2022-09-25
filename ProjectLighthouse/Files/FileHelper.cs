@@ -24,7 +24,11 @@ public static class FileHelper
 {
     public static readonly string ResourcePath = Path.Combine(Environment.CurrentDirectory, "r");
 
+    public static readonly string ImagePath = Path.Combine(Environment.CurrentDirectory, "png");
+
     public static string GetResourcePath(string hash) => Path.Combine(ResourcePath, hash);
+
+    public static string GetImagePath(string hash) => Path.Combine(ImagePath, hash);
 
     public static bool AreDependenciesSafe(LbpFile file)
     {
@@ -226,6 +230,15 @@ public static class FileHelper
     }
 
     public static bool ResourceExists(string hash) => File.Exists(GetResourcePath(hash));
+
+    public static void DeleteResource(string hash)
+    {
+        // sanity check so someone doesn't somehow delete the entire resource folder
+        if (ResourceExists(hash) && (File.GetAttributes(hash) & FileAttributes.Directory) != FileAttributes.Directory)
+        {
+            File.Delete(GetResourcePath(hash));
+        }
+    }
 
     public static int ResourceSize(string hash)
     {
