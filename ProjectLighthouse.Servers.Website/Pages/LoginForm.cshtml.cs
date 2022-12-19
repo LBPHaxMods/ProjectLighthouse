@@ -1,4 +1,5 @@
 #nullable enable
+using System.Web;
 using JetBrains.Annotations;
 using LBPUnion.ProjectLighthouse.Configuration;
 using LBPUnion.ProjectLighthouse.Extensions;
@@ -9,7 +10,6 @@ using LBPUnion.ProjectLighthouse.PlayerData;
 using LBPUnion.ProjectLighthouse.PlayerData.Profiles;
 using LBPUnion.ProjectLighthouse.PlayerData.Profiles.Email;
 using LBPUnion.ProjectLighthouse.Servers.Website.Pages.Layouts;
-using LBPUnion.ProjectLighthouse.Types;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -27,7 +27,7 @@ public class LoginForm : BaseLayout
     {
         if (string.IsNullOrWhiteSpace(username))
         {
-            this.Error = this.Translate(ErrorStrings.UsernameInvalid);
+            this.Error = ServerConfiguration.Instance.Mail.MailEnabled ? this.Translate(ErrorStrings.UsernameInvalid) : this.Translate(ErrorStrings.EmailInvalid);
             return this.Page();
         }
 
@@ -43,18 +43,38 @@ public class LoginForm : BaseLayout
             return this.Page();
         }
 
-        User? user = await this.Database.Users.FirstOrDefaultAsync(u => u.Username == username);
+        User? user;
+
+        if (!ServerConfiguration.Instance.Mail.MailEnabled)
+        {
+            user = await this.Database.Users.FirstOrDefaultAsync(u => u.Username == username);
+        }
+        else
+        {
+            user = await this.Database.Users.FirstOrDefaultAsync(u => u.EmailAddress == username);
+            if (user == null)
+            {
+                User? noEmailUser = await this.Database.Users.FirstOrDefaultAsync(u => u.Username == username);
+                if (noEmailUser != null && noEmailUser.EmailAddress == null) user = noEmailUser;
+
+            }
+        }
+
         if (user == null)
         {
             Logger.Warn($"User {username} failed to login on web due to invalid username", LogArea.Login);
-            this.Error = "The username or password you entered is invalid.";
+            this.Error = ServerConfiguration.Instance.Mail.MailEnabled
+                ? "The email or password you entered is invalid."
+                : "The username or password you entered is invalid.";
             return this.Page();
         }
 
         if (!BCrypt.Net.BCrypt.Verify(password, user.Password))
         {
             Logger.Warn($"User {user.Username} (id: {user.UserId}) failed to login on web due to invalid password", LogArea.Login);
-            this.Error = "The username or password you entered is invalid.";
+            this.Error = ServerConfiguration.Instance.Mail.MailEnabled
+                ? "The email or password you entered is invalid."
+                : "The username or password you entered is invalid.";
             return this.Page();
         }
 
@@ -88,6 +108,7 @@ public class LoginForm : BaseLayout
             UserId = user.UserId,
             UserToken = CryptoHelper.GenerateAuthToken(),
             ExpiresAt = DateTime.Now + TimeSpan.FromDays(7),
+            Verified = !ServerConfiguration.Instance.TwoFactorConfiguration.TwoFactorEnabled || !user.IsTwoFactorSetup,
         };
 
         this.Database.WebTokens.Add(webToken);
@@ -107,6 +128,14 @@ public class LoginForm : BaseLayout
 
         if (user.PasswordResetRequired) return this.Redirect("~/passwordResetRequired");
         if (ServerConfiguration.Instance.Mail.MailEnabled && !user.EmailAddressVerified) return this.Redirect("~/login/sendVerificationEmail");
+
+        if (!webToken.Verified)
+        {
+            return string.IsNullOrWhiteSpace(redirect)
+                ? this.Redirect("~/2fa")
+                : this.Redirect("~/2fa" + "?redirect=" + HttpUtility.UrlEncode(redirect));
+        }
+
 
         if (string.IsNullOrWhiteSpace(redirect))
         {

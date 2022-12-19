@@ -16,7 +16,7 @@ namespace ProjectLighthouse.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "6.0.9")
+                .HasAnnotation("ProductVersion", "6.0.10")
                 .HasAnnotation("Relational:MaxIdentifierLength", 64);
 
             modelBuilder.Entity("LBPUnion.ProjectLighthouse.Administration.CompletedMigration", b =>
@@ -815,6 +815,9 @@ namespace ProjectLighthouse.Migrations
                     b.Property<string>("PlanetHashLBP2")
                         .HasColumnType("longtext");
 
+                    b.Property<string>("PlanetHashLBP2CC")
+                        .HasColumnType("longtext");
+
                     b.Property<string>("PlanetHashLBP3")
                         .HasColumnType("longtext");
 
@@ -825,6 +828,12 @@ namespace ProjectLighthouse.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("TimeZone")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("TwoFactorBackup")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("TwoFactorSecret")
                         .HasColumnType("longtext");
 
                     b.Property<string>("Username")
@@ -871,6 +880,9 @@ namespace ProjectLighthouse.Migrations
                         .HasColumnType("datetime(6)");
 
                     b.Property<string>("Token")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Username")
                         .HasColumnType("longtext");
 
                     b.HasKey("TokenId");
@@ -991,6 +1003,9 @@ namespace ProjectLighthouse.Migrations
 
                     b.Property<string>("UserToken")
                         .HasColumnType("longtext");
+
+                    b.Property<bool>("Verified")
+                        .HasColumnType("tinyint(1)");
 
                     b.HasKey("TokenId");
 

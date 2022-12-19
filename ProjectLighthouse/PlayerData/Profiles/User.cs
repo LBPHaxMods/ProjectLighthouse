@@ -131,6 +131,9 @@ public class User
     public string PlanetHashLBP2 { get; set; } = "";
 
     [JsonIgnore]
+    public string PlanetHashLBP2CC { get; set; } = "";
+
+    [JsonIgnore]
     public string PlanetHashLBP3 { get; set; } = "";
 
     [JsonIgnore]
@@ -154,23 +157,19 @@ public class User
     public UserStatus Status => new(this.database, this.UserId);
 
     [JsonIgnore]
-    public bool IsBanned => this.PermissionLevel == PermissionLevel.Banned;
+    public bool IsBanned => this.PermissionLevel is PermissionLevel.Banned;
 
     [JsonIgnore]
-    public bool IsRestricted => this.PermissionLevel == PermissionLevel.Restricted ||
-                                this.PermissionLevel == PermissionLevel.Banned;
+    public bool IsRestricted => this.PermissionLevel is PermissionLevel.Restricted or PermissionLevel.Banned;
 
     [JsonIgnore]
-    public bool IsSilenced => this.PermissionLevel == PermissionLevel.Silenced || 
-                              this.PermissionLevel == PermissionLevel.Restricted ||
-                              this.PermissionLevel == PermissionLevel.Banned;
+    public bool IsSilenced => this.PermissionLevel is PermissionLevel.Silenced or PermissionLevel.Restricted or PermissionLevel.Banned;
 
     [JsonIgnore]
-    public bool IsModerator => this.PermissionLevel == PermissionLevel.Moderator ||
-                               this.PermissionLevel == PermissionLevel.Administrator;
+    public bool IsModerator => this.PermissionLevel is PermissionLevel.Moderator or PermissionLevel.Administrator;
 
     [JsonIgnore]
-    public bool IsAdmin => this.PermissionLevel == PermissionLevel.Administrator;
+    public bool IsAdmin => this.PermissionLevel is PermissionLevel.Administrator;
 
     [JsonIgnore]
     public PermissionLevel PermissionLevel { get; set; } = PermissionLevel.Default;
@@ -185,13 +184,28 @@ public class User
     public string? ApprovedIPAddress { get; set; }
     #nullable disable
 
+    [JsonIgnore]
     public string Language { get; set; } = "en";
 
+    [JsonIgnore]
     public string TimeZone { get; set; } = TimeZoneInfo.Local.Id;
 
     public PrivacyType LevelVisibility { get; set; } = PrivacyType.All;
 
     public PrivacyType ProfileVisibility { get; set; } = PrivacyType.All;
+
+    [JsonIgnore]
+    public bool TwoFactorRequired => ServerConfiguration.Instance.TwoFactorConfiguration.RequireTwoFactor && 
+                                     this.PermissionLevel >= ServerConfiguration.Instance.TwoFactorConfiguration.RequiredTwoFactorLevel;
+
+    [JsonIgnore]
+    public bool IsTwoFactorSetup => this.TwoFactorBackup?.Length > 0 && this.TwoFactorSecret?.Length > 0;
+
+    [JsonIgnore]
+    public string TwoFactorSecret { get; set; } = "";
+
+    [JsonIgnore]
+    public string TwoFactorBackup { get; set; } = "";
 
     // should not be adjustable by user
     public bool CommentsEnabled { get; set; } = true;
@@ -231,7 +245,7 @@ public class User
 
     private string serializeEarth(GameVersion gameVersion)
     {
-        return LbpSerializer.StringElement<string>
+        string planets = LbpSerializer.StringElement<string>
         (
             "planets",
             gameVersion switch
@@ -243,6 +257,10 @@ public class User
             },
             true
         );
+        if (gameVersion == GameVersion.LittleBigPlanet2)
+            planets += LbpSerializer.StringElement<string>("crossControlPlanet", this.PlanetHashLBP2CC, true);
+
+        return planets;
     }
 
     #region Slots

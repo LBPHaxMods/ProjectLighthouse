@@ -21,7 +21,7 @@
 <script>
 function onSubmit(e){
     document.getElementById("avatar-encoded").value = selectedAvatar.toString();
-    @if(ServerConfiguration.Instance.Mail.MailEnabled){
+    @if (ServerConfiguration.Instance.Mail.MailEnabled){
         <text>
         let newEmail = document.getElementById("email").value;
         if (newEmail.length === 0){
@@ -67,7 +67,7 @@ function onSubmit(e){
                 @if (ServerConfiguration.Instance.Mail.MailEnabled && (Model.User == Model.ProfileUser || Model.User!.IsAdmin))
                 {
                     <div class="field">
-                        <label style="text-align: left" for="email">Email</label>
+                        <label style="text-align: left" for="email">@Model.Translate(GeneralStrings.Email)</label>
                         <input type="text" name="email" id="email" required value="@Model.ProfileUser.EmailAddress" placeholder="Email Address">
                     </div>
                 }
@@ -114,16 +114,37 @@ function onSubmit(e){
                         </select>
                     </div>
                 }
+                @if (Model.User == Model.ProfileUser)
+                {
+                    <div class="field">
+                        <label style="text-align: left">Authentication</label>
+                        <a class="ui blue button" href="/passwordReset">
+                            <i class="key icon"></i>
+                            @Model.Translate(GeneralStrings.ResetPassword)
+                        </a>
+                        @if (ServerConfiguration.Instance.TwoFactorConfiguration.TwoFactorEnabled)
+                        {
+                            @if (Model.ProfileUser.IsTwoFactorSetup)
+                            {
+                                <a class="ui red button" href="/remove2fa">
+                                    <i class="lock open icon"></i>
+                                    @Model.Translate(TwoFactorStrings.DisableTwoFactor)
+                                </a>
+                            }
+                            else
+                            {
+                                <a class="ui green button" href="/setup2fa">
+                                    <i class="lock icon"></i>
+                                    @Model.Translate(TwoFactorStrings.EnableTwoFactor)
+                                </a>
+                            }
+                        }
+                    </div>
+                }
+                <div class="ui divider"></div>
                 <button class="ui button green" tabindex="0">Save Changes</button>
                 <a class="ui button red" href="/user/@Model.ProfileUser.UserId">Discard Changes</a>
                 <div class="ui divider fitted hidden"></div>
-                @if (Model.User == Model.ProfileUser)
-                {
-                    <a class="ui blue button" href="/passwordReset">
-                        <i class="key icon"></i>
-                        @Model.Translate(GeneralStrings.ResetPassword)
-                    </a>
-                }
             </form>
         </div>
     </div>

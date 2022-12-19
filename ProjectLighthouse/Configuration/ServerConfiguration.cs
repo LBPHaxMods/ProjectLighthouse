@@ -23,7 +23,7 @@ public class ServerConfiguration
     // You can use an ObsoleteAttribute instead. Make sure you set it to error, though.
     //
     // Thanks for listening~
-    public const int CurrentConfigVersion = 12;
+    public const int CurrentConfigVersion = 14;
 
     #region Meta
 
@@ -54,7 +54,6 @@ public class ServerConfiguration
         // If a valid YML configuration is available!
         if (File.Exists(ConfigFileName) && (tempConfig = fromFile(ConfigFileName)) != null)
         {
-            //            Instance = JsonSerializer.Deserialize<ServerConfiguration>(configFile) ?? throw new ArgumentNullException(nameof(ConfigFileName));
             Instance = tempConfig;
 
             if (Instance.ConfigVersion < CurrentConfigVersion)
@@ -200,4 +199,5 @@ public class ServerConfiguration
     public WebsiteConfiguration WebsiteConfiguration { get; set; } = new();
     public CustomizationConfiguration Customization { get; set; } = new();
     public RateLimitConfiguration RateLimitConfiguration { get; set; } = new();
+    public TwoFactorConfiguration TwoFactorConfiguration { get; set; } = new();
 }

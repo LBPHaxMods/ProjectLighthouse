@@ -10,9 +10,7 @@ using LBPUnion.ProjectLighthouse.Files;
 using LBPUnion.ProjectLighthouse.Helpers;
 using LBPUnion.ProjectLighthouse.Logging;
 using LBPUnion.ProjectLighthouse.Logging.Loggers;
-using LBPUnion.ProjectLighthouse.Match.Rooms;
 using LBPUnion.ProjectLighthouse.PlayerData.Profiles;
-using LBPUnion.ProjectLighthouse.Startup;
 using LBPUnion.ProjectLighthouse.StorableLists;
 using LBPUnion.ProjectLighthouse.Types;
 using Microsoft.EntityFrameworkCore;
@@ -54,7 +52,7 @@ public static class StartupTasks
         using Database database = new();
         
         #if !DEBUG
-        if(serverType == ServerType.GameServer)
+        if (serverType == ServerType.GameServer)
         #endif
         migrateDatabase(database);
         
